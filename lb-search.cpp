@@ -34,13 +34,8 @@ int main() {
     std::default_random_engine rng(seed);
     std::uniform_int_distribution<unsigned> dstr(1, 200'000);
 
-    unsigned b = 0;
     for (unsigned cnt = 0; cnt < array_size; ++cnt) {
-        while (true) {
-            b = dstr(rng);
-            if (b != 125000) break;
-        }
-        a[cnt] = b;
+        a[cnt] = dstr(rng);
     }
 
     auto begin = std::chrono::steady_clock::now();
