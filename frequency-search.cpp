@@ -5,13 +5,19 @@
 #include <string>
 
 
+unsigned linearSearch(unsigned search_for, unsigned array[], unsigned size) {
+    for (unsigned i = 0; i < size; ++i) {
+        if (array[i] == search_for) return i;
+    }
+    return size;
+}
+
+
 unsigned linearSearchA(unsigned search_for, unsigned array[], unsigned size) {
     for (unsigned i = 0; i < size; ++i) {
         if (array[i] == search_for) {
             if (i != 0) {
-                unsigned temp = array[0];
-                array[0] = array[i];
-                array[i] = temp;
+                std::swap(array[0], array[i]);
             }
             return i;
         }
@@ -24,9 +30,7 @@ unsigned linearSearchB(unsigned search_for, unsigned array[], unsigned size) {
     for (unsigned i = 0; i < size; ++i) {
         if (array[i] == search_for) {
             if (i != 0) {
-                unsigned temp = array[i - 1];
-                array[i - 1] = array[i];
-                array[i] = temp;
+                std::swap(array[i - 1], array[i]);
             }
             return i;
         }
@@ -40,9 +44,7 @@ unsigned linearSearchC(unsigned search_for, unsigned array[], unsigned size, uns
         if (array[i] == search_for) {
             if (i != 0) {
                 if (count[i] > count[i - 1]) {
-                    unsigned temp = array[0];
-                    array[0] = array[i];
-                    array[i] = temp;
+                    std::swap(array[i - 1], array[i]);
                 }
             }
             return i;
@@ -52,154 +54,251 @@ unsigned linearSearchC(unsigned search_for, unsigned array[], unsigned size, uns
 }
 
 
-int main() {
-    unsigned array_size = 100000;
-    unsigned a[100000];
-    unsigned count[100000];
+unsigned nonuniformDistribution(unsigned max, unsigned repeat_percent, std::uniform_int_distribution<unsigned> uniform, std::default_random_engine rng) {
+    unsigned x = uniform(rng);
+    if (x > max * repeat_percent / 100) x = max * repeat_percent / 100;
+    return x;
+}
 
-    unsigned seed = 1001;
+
+unsigned array_size = 1'000'000;
+unsigned a[1'000'000];
+unsigned count[1'000'000];
+unsigned ran[500'000];
+
+
+int main() {
+    unsigned repeat = 20'000;
+
+    unsigned seed = 1204;
+    unsigned max_value = array_size;
+    unsigned repeat_percent = 20;
     std::default_random_engine rng(seed);
-    std::uniform_int_distribution<unsigned> uniform(1, 100'000);
-    std::binomial_distribution<unsigned> binomial(99'999, 0.5);
+    std::uniform_int_distribution<unsigned> uniform(1, max_value);
 
     auto begin = std::chrono::steady_clock::now();
     auto end = std::chrono::steady_clock::now();
-    auto time_span = std::chrono::duration_cast<std::chrono::milliseconds>(end - begin);
+    auto time_span = std::chrono::duration_cast<std::chrono::nanoseconds>(end - begin);
 
+    unsigned x;
+    unsigned long long time;
     std::ofstream fout;
 
-    fout.open("freq-linear-uniform-a.csv");
+    unsigned dn = (array_size - 100) / 20;
+
+    /* fout.open("./data/freq-linear-uniform-0.csv");
     fout.clear();
     fout << "n,std\n";
 
-    unsigned dn = (array_size - 100) / 100;
-
     for (unsigned n = 100; n <= array_size; n += dn) {
-        for (unsigned cnt = 0; cnt < array_size; ++cnt) {
+        for (unsigned cnt = 0; cnt < n; ++cnt) {
             a[cnt] = uniform(rng);
         }
-        begin = std::chrono::steady_clock::now();
-        for (unsigned cnt = 0; cnt != 200'000; ++cnt) {
-            linearSearchA(uniform(rng), a, n);
+        time = 0;
+        for (unsigned cnt = 0; cnt != repeat; ++cnt) {
+            x = uniform(rng);
+            begin = std::chrono::steady_clock::now();
+            linearSearch(x, a, n);
+            end = std::chrono::steady_clock::now();
+            time_span = std::chrono::duration_cast<std::chrono::nanoseconds>(end - begin);
+            time += time_span.count();
         }
-        end = std::chrono::steady_clock::now();
-        time_span = std::chrono::duration_cast<std::chrono::milliseconds>(end - begin);
-        fout << n << "," << time_span.count() << "\n";
+        fout << n << "," << time << "\n";
+        std::cout << n << std::endl;
+    }
+    fout.close();
+    
+    std::cout << "Uniform 0 done." << std::endl;
+
+
+    /* fout.open("./data/freq-linear-uniform-a.csv");
+    fout.clear();
+    fout << "n,std\n";
+
+    for (unsigned n = 100; n <= array_size; n += dn) {
+        for (unsigned cnt = 0; cnt < n; ++cnt) {
+            a[cnt] = uniform(rng);
+        }
+        time = 0;
+        for (unsigned cnt = 0; cnt != repeat; ++cnt) {
+            x = uniform(rng);
+            begin = std::chrono::steady_clock::now();
+            linearSearchA(x, a, n);
+            end = std::chrono::steady_clock::now();
+            time_span = std::chrono::duration_cast<std::chrono::nanoseconds>(end - begin);
+            time += time_span.count();
+        }
+        fout << n << "," << time << "\n";
         std::cout << n << std::endl;
     }
     fout.close();
     
     std::cout << "Uniform A done." << std::endl;
 
-    fout.open("freq-linear-uniform-b.csv");
+    fout.open("./data/freq-linear-uniform-b.csv");
     fout.clear();
     fout << "n,std\n";
 
     for (unsigned n = 100; n <= array_size; n += dn) {
-        for (unsigned cnt = 0; cnt < array_size; ++cnt) {
+        for (unsigned cnt = 0; cnt < n; ++cnt) {
             a[cnt] = uniform(rng);
         }
-        begin = std::chrono::steady_clock::now();
-        for (unsigned cnt = 0; cnt != 200'000; ++cnt) {
-            linearSearchB(uniform(rng), a, n);
+        time = 0;
+        for (unsigned cnt = 0; cnt != repeat; ++cnt) {
+            x = uniform(rng);
+            begin = std::chrono::steady_clock::now();
+            linearSearchB(x, a, n);
+            end = std::chrono::steady_clock::now();
+            time_span = std::chrono::duration_cast<std::chrono::nanoseconds>(end - begin);
+            time += time_span.count();
         }
-        end = std::chrono::steady_clock::now();
-        time_span = std::chrono::duration_cast<std::chrono::milliseconds>(end - begin);
-        fout << n << "," << time_span.count() << "\n";
+        fout << n << "," << time << "\n";
         std::cout << n << std::endl;
     }
     fout.close();
     
     std::cout << "Uniform B done." << std::endl;
 
-    fout.open("freq-linear-uniform-c.csv");
+    fout.open("./data/freq-linear-uniform-c.csv");
     fout.clear();
     fout << "n,std\n";
 
     for (unsigned n = 100; n <= array_size; n += dn) {
-        for (unsigned cnt = 0; cnt < array_size; ++cnt) {
+        for (unsigned cnt = 0; cnt < n; ++cnt) {
             a[cnt] = uniform(rng);
         }
-        for (unsigned cnt = 0; cnt < array_size; ++cnt) {
+        for (unsigned cnt = 0; cnt < n; ++cnt) {
             count[cnt] = 0;
         }
-        begin = std::chrono::steady_clock::now();
-        for (unsigned cnt = 0; cnt != 200'000; ++cnt) {
-            linearSearchC(uniform(rng), a, n, count);
+        time = 0;
+        for (unsigned cnt = 0; cnt != repeat; ++cnt) {
+            x = uniform(rng);
+            begin = std::chrono::steady_clock::now();
+            linearSearchC(x, a, n, count);
+            end = std::chrono::steady_clock::now();
+            time_span = std::chrono::duration_cast<std::chrono::nanoseconds>(end - begin);
+            time += time_span.count();
         }
-        end = std::chrono::steady_clock::now();
-        time_span = std::chrono::duration_cast<std::chrono::milliseconds>(end - begin);
-        fout << n << "," << time_span.count() << "\n";
+        fout << n << "," << time << "\n";
         std::cout << n << std::endl;
     }
     fout.close();
     
-    std::cout << "Uniform C done." << std::endl;
+    std::cout << "Uniform C done." << std::endl; */
 
 
-    fout.open("freq-linear-binomial-a.csv");
+    fout.open("./data/freq-linear-binomial-0.csv");
     fout.clear();
     fout << "n,std\n";
 
     for (unsigned n = 100; n <= array_size; n += dn) {
-        for (unsigned cnt = 0; cnt < array_size; ++cnt) {
+        for (unsigned cnt = 0; cnt < n; ++cnt) {
             a[cnt] = uniform(rng);
         }
+        time = 0;
+        for (unsigned cnt = 0; cnt < repeat; ++cnt) {
+            ran[cnt] = nonuniformDistribution(max_value, repeat_percent, uniform, rng);
+        }
         begin = std::chrono::steady_clock::now();
-        for (unsigned cnt = 0; cnt != 200'000; ++cnt) {
-            linearSearchA(binomial(rng) + 1, a, n);
+        for (unsigned cnt = 0; cnt != repeat; ++cnt) {
+            
+            linearSearch(ran[cnt], a, n);
+            
         }
         end = std::chrono::steady_clock::now();
-        time_span = std::chrono::duration_cast<std::chrono::milliseconds>(end - begin);
-        fout << n << "," << time_span.count() << "\n";
+        time_span = std::chrono::duration_cast<std::chrono::nanoseconds>(end - begin);
+        time += time_span.count();
+        fout << n << "," << time << "\n";
         std::cout << n << std::endl;
     }
     fout.close();
     
-    std::cout << "Binomial A done." << std::endl;
+    std::cout << "Nonuniform 0 done." << std::endl;
 
-    fout.open("freq-linear-binomial-b.csv");
+    fout.open("./data/freq-linear-binomial-a.csv");
     fout.clear();
     fout << "n,std\n";
 
     for (unsigned n = 100; n <= array_size; n += dn) {
-        for (unsigned cnt = 0; cnt < array_size; ++cnt) {
+        for (unsigned cnt = 0; cnt < n; ++cnt) {
             a[cnt] = uniform(rng);
         }
+        time = 0;
+        for (unsigned cnt = 0; cnt < repeat; ++cnt) {
+            ran[cnt] = nonuniformDistribution(max_value, repeat_percent, uniform, rng);
+        }
         begin = std::chrono::steady_clock::now();
-        for (unsigned cnt = 0; cnt != 200'000; ++cnt) {
-            linearSearchB(binomial(rng) + 1, a, n);
+        for (unsigned cnt = 0; cnt != repeat; ++cnt) {
+            
+            linearSearchA(ran[cnt], a, n);
+            
         }
         end = std::chrono::steady_clock::now();
-        time_span = std::chrono::duration_cast<std::chrono::milliseconds>(end - begin);
-        fout << n << "," << time_span.count() << "\n";
+        time_span = std::chrono::duration_cast<std::chrono::nanoseconds>(end - begin);
+        time += time_span.count();
+        fout << n << "," << time << "\n";
         std::cout << n << std::endl;
     }
     fout.close();
     
-    std::cout << "Binomial B done." << std::endl;
+    std::cout << "Nonuniform A done." << std::endl;
 
-    fout.open("freq-linear-binomial-c.csv");
+    fout.open("./data/freq-linear-binomial-b.csv");
     fout.clear();
     fout << "n,std\n";
 
     for (unsigned n = 100; n <= array_size; n += dn) {
-        for (unsigned cnt = 0; cnt < array_size; ++cnt) {
+        for (unsigned cnt = 0; cnt < n; ++cnt) {
             a[cnt] = uniform(rng);
         }
-        for (unsigned cnt = 0; cnt < array_size; ++cnt) {
+        time = 0;
+        for (unsigned cnt = 0; cnt < repeat; ++cnt) {
+            ran[cnt] = nonuniformDistribution(max_value, repeat_percent, uniform, rng);
+        }
+        begin = std::chrono::steady_clock::now();
+        for (unsigned cnt = 0; cnt != repeat; ++cnt) {
+            
+            linearSearchB(ran[cnt], a, n);
+            
+        }
+        end = std::chrono::steady_clock::now();
+        time_span = std::chrono::duration_cast<std::chrono::nanoseconds>(end - begin);
+        time += time_span.count();
+        fout << n << "," << time << "\n";
+        std::cout << n << std::endl;
+    }
+    fout.close();
+    
+    std::cout << "Nonuniform B done." << std::endl;
+
+    fout.open("./data/freq-linear-binomial-c.csv");
+    fout.clear();
+    fout << "n,std\n";
+
+    for (unsigned n = 100; n <= array_size; n += dn) {
+        for (unsigned cnt = 0; cnt < n; ++cnt) {
+            a[cnt] = uniform(rng);
+        }
+        for (unsigned cnt = 0; cnt < n; ++cnt) {
             count[cnt] = 0;
         }
+        time = 0;
+        for (unsigned cnt = 0; cnt < repeat; ++cnt) {
+            ran[cnt] = nonuniformDistribution(max_value, repeat_percent, uniform, rng);
+        }
         begin = std::chrono::steady_clock::now();
-        for (unsigned cnt = 0; cnt != 200'000; ++cnt) {
-            linearSearchC(binomial(rng) + 1, a, n, count);
+        for (unsigned cnt = 0; cnt != repeat; ++cnt) {
+            
+            linearSearchC(ran[cnt], a, n, count);
+            
         }
         end = std::chrono::steady_clock::now();
-        time_span = std::chrono::duration_cast<std::chrono::milliseconds>(end - begin);
-        fout << n << "," << time_span.count() << "\n";
+        time_span = std::chrono::duration_cast<std::chrono::nanoseconds>(end - begin);
+        time += time_span.count();
+        fout << n << "," << time << "\n";
         std::cout << n << std::endl;
     }
     fout.close();
     
-    std::cout << "Binomial C done." << std::endl;
+    std::cout << "Nonuniform C done." << std::endl;
 }

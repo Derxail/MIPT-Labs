@@ -2,9 +2,10 @@
 #include <chrono>
 #include <random>
 #include <fstream>
+#include <algorithm>
 
 
-void squareFindAddendums(int sum, int array[], unsigned size, unsigned res[2]) {
+void squareFindAddendums(unsigned sum, unsigned array[], unsigned size, unsigned res[2]) {
     for (unsigned i = 0; i < size; ++i) {
         for (unsigned j = i + 1; j < size; ++j) {
             if (array[i] + array[j] == sum) {
@@ -19,7 +20,7 @@ void squareFindAddendums(int sum, int array[], unsigned size, unsigned res[2]) {
 }
 
 
-void linearFindAddendums(int sum, int array[], unsigned size, unsigned res[2]) {
+void linearFindAddendums(unsigned sum, unsigned array[], unsigned size, unsigned res[2]) {
     unsigned i = 0, j = size - 1;
     while (i < j) {
         if (array[i] + array[j] < sum) ++i;
@@ -35,14 +36,16 @@ void linearFindAddendums(int sum, int array[], unsigned size, unsigned res[2]) {
 }
 
 
+unsigned array_size = 1'000'000;
+unsigned a[1'000'000];
+
+
 int main() {
-    int array_size = 200000;
-    int a[200000];
     unsigned res[2];
 
     unsigned seed = 1001;
     std::default_random_engine rng(seed);
-    std::uniform_int_distribution<unsigned> dstr(1, 200'000);
+    std::uniform_int_distribution<unsigned> dstr(1, array_size);
 
     for (unsigned cnt = 0; cnt < array_size; ++cnt) {
         a[cnt] = dstr(rng);
@@ -51,53 +54,63 @@ int main() {
 
     auto begin = std::chrono::steady_clock::now();
     auto end = std::chrono::steady_clock::now();
-    auto time_span = std::chrono::duration_cast<std::chrono::milliseconds>(end - begin);
+    auto time_span = std::chrono::duration_cast<std::chrono::nanoseconds>(end - begin);
+
+    unsigned x; 
+    unsigned long long time = 0;
 
     std::ofstream fout;
 
-    fout.open("fa-linear.csv");
+    /* fout.open("./data/fa-linear.csv");
     fout.clear();
-    fout << "n, std, worst\n";
+    fout << "n,std,worst\n";
 
-    for (unsigned n = 100; n <= array_size; n += 1999) {
-        begin = std::chrono::steady_clock::now();
-        for (unsigned cnt = 0; cnt != 100'000; ++cnt) {
-            linearFindAddendums(dstr(rng), a, n, res);
+    for (unsigned n = 100; n <= array_size; n += 19998) {
+        time = 0;
+        for (unsigned cnt = 0; cnt != 10'000; ++cnt) {
+            x = dstr(rng) % n;
+            begin = std::chrono::steady_clock::now();
+            linearFindAddendums(x, a, n, res);
+            end = std::chrono::steady_clock::now();
+            time_span = std::chrono::duration_cast<std::chrono::nanoseconds>(end - begin);
+            time += time_span.count();
         }
-        end = std::chrono::steady_clock::now();
-        time_span = std::chrono::duration_cast<std::chrono::milliseconds>(end - begin);
-        fout << n << "," << time_span.count() << ",";
+        fout << n << "," << time << ",";
 
-        begin = std::chrono::steady_clock::now();
-        for (unsigned cnt = 0; cnt != 100'000; ++cnt) {
-            linearFindAddendums(0, a, n, res);
+        time = 0;
+        x = 0;
+        for (unsigned cnt = 0; cnt != 10'000; ++cnt) {
+            begin = std::chrono::steady_clock::now();
+            linearFindAddendums(x, a, n, res);
+            end = std::chrono::steady_clock::now();
+            time_span = std::chrono::duration_cast<std::chrono::nanoseconds>(end - begin);
+            time += time_span.count();
         }
-        end = std::chrono::steady_clock::now();
-        time_span = std::chrono::duration_cast<std::chrono::milliseconds>(end - begin);
-        fout << time_span.count() << '\n';
+        fout << time << '\n';
         std::cout << n << std::endl;
     }
-    fout.close();
+    fout.close(); */
     
     std::cout << "Linear done." << std::endl;
 
-    fout.open("fa-square.csv");
+    fout.open("./data/fa-square.csv");
     fout.clear();
-    fout << "n, std, worst\n";
+    fout << "n,std,worst\n";
 
-    for (unsigned n = 100; n <= array_size; n += 1999) {
-        begin = std::chrono::steady_clock::now();
-        for (unsigned cnt = 0; cnt != 100'000; ++cnt) {
-            squareFindAddendums(dstr(rng), a, n, res);
+    for (unsigned n = 100; n <= array_size; n += 49995) {
+        time = 0;
+        for (unsigned cnt = 0; cnt < 100; ++cnt) {
+            x = dstr(rng) % n;
+            begin = std::chrono::steady_clock::now();
+            for (unsigned i = 0; i < 30; ++i) squareFindAddendums(x, a, n, res);
+            end = std::chrono::steady_clock::now();
+            time_span = std::chrono::duration_cast<std::chrono::milliseconds>(end - begin);
         }
-        end = std::chrono::steady_clock::now();
-        time_span = std::chrono::duration_cast<std::chrono::milliseconds>(end - begin);
-        fout << n << "," << time_span.count() << ",";
+        fout << n << "," << (double)time_span.count() / 3000. << ",";
 
+        x = 4'000'000;
         begin = std::chrono::steady_clock::now();
-        for (unsigned cnt = 0; cnt != 100'000; ++cnt) {
-            squareFindAddendums(0, a, n, res);
-        }
+        squareFindAddendums(x, a, n, res);
         end = std::chrono::steady_clock::now();
         time_span = std::chrono::duration_cast<std::chrono::milliseconds>(end - begin);
         fout << time_span.count() << '\n';
