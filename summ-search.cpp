@@ -61,7 +61,7 @@ int main() {
 
     std::ofstream fout;
 
-    /* fout.open("./data/fa-linear.csv");
+    fout.open("./data/fa-linear.csv");
     fout.clear();
     fout << "n,std,worst\n";
 
@@ -89,7 +89,7 @@ int main() {
         fout << time << '\n';
         std::cout << n << std::endl;
     }
-    fout.close(); */
+    fout.close();
     
     std::cout << "Linear done." << std::endl;
 
@@ -105,8 +105,9 @@ int main() {
             for (unsigned i = 0; i < 30; ++i) squareFindAddendums(x, a, n, res);
             end = std::chrono::steady_clock::now();
             time_span = std::chrono::duration_cast<std::chrono::milliseconds>(end - begin);
+            time += time_span.count();
         }
-        fout << n << "," << (double)time_span.count() / 3000. << ",";
+        fout << n << "," << time / 3000 << ",";
 
         x = 4'000'000;
         begin = std::chrono::steady_clock::now();

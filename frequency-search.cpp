@@ -13,51 +13,15 @@ unsigned linearSearch(unsigned search_for, unsigned array[], unsigned size) {
 }
 
 
-unsigned linearSearchA(unsigned search_for, unsigned array[], unsigned size) {
-    for (unsigned i = 0; i < size; ++i) {
-        if (array[i] == search_for) {
-            if (i != 0) {
-                std::swap(array[0], array[i]);
-            }
-            return i;
-        }
+unsigned nonuniformDistribution(std::default_random_engine &rng, unsigned minmax, unsigned maxmax, unsigned chance_percent) {
+    std::uniform_int_distribution<unsigned> uniform1(1, minmax);
+    std::uniform_int_distribution<unsigned> uniform2(1, maxmax);
+    std::uniform_int_distribution<unsigned> uniform0(1, 100);
+    if (uniform0(rng) > chance_percent) {
+        return uniform1(rng);
+    } else {
+        return uniform2(rng);
     }
-    return size;
-}
-
-
-unsigned linearSearchB(unsigned search_for, unsigned array[], unsigned size) {
-    for (unsigned i = 0; i < size; ++i) {
-        if (array[i] == search_for) {
-            if (i != 0) {
-                std::swap(array[i - 1], array[i]);
-            }
-            return i;
-        }
-    }
-    return size;
-}
-
-
-unsigned linearSearchC(unsigned search_for, unsigned array[], unsigned size, unsigned count[]) {
-    for (unsigned i = 0; i < size; ++i) {
-        if (array[i] == search_for) {
-            if (i != 0) {
-                if (count[i] > count[i - 1]) {
-                    std::swap(array[i - 1], array[i]);
-                }
-            }
-            return i;
-        }
-    }
-    return size;
-}
-
-
-unsigned nonuniformDistribution(unsigned max, unsigned repeat_percent, std::uniform_int_distribution<unsigned> uniform, std::default_random_engine rng) {
-    unsigned x = uniform(rng);
-    if (x > max * repeat_percent / 100) x = max * repeat_percent / 100;
-    return x;
 }
 
 
@@ -68,11 +32,11 @@ unsigned ran[500'000];
 
 
 int main() {
-    unsigned repeat = 20'000;
+    unsigned repeat = 10'000;
 
-    unsigned seed = 1204;
+    unsigned seed = 1001;
     unsigned max_value = array_size;
-    unsigned repeat_percent = 20;
+    unsigned chance_percent = 20;
     std::default_random_engine rng(seed);
     std::uniform_int_distribution<unsigned> uniform(1, max_value);
 
@@ -82,11 +46,12 @@ int main() {
 
     unsigned x;
     unsigned long long time;
+    unsigned i;
     std::ofstream fout;
 
     unsigned dn = (array_size - 100) / 20;
 
-    /* fout.open("./data/freq-linear-uniform-0.csv");
+    fout.open("./data/freq-linear-uniform-0.csv");
     fout.clear();
     fout << "n,std\n";
 
@@ -187,7 +152,7 @@ int main() {
     std::cout << "Uniform C done." << std::endl; */
 
 
-    fout.open("./data/freq-linear-binomial-0.csv");
+    /*fout.open("./data/freq-linear-binomial-0.csv");
     fout.clear();
     fout << "n,std\n";
 
@@ -195,19 +160,17 @@ int main() {
         for (unsigned cnt = 0; cnt < n; ++cnt) {
             a[cnt] = uniform(rng);
         }
+        //std::shuffle(&a[0], &a[n], rng);
         time = 0;
-        for (unsigned cnt = 0; cnt < repeat; ++cnt) {
-            ran[cnt] = nonuniformDistribution(max_value, repeat_percent, uniform, rng);
-        }
-        begin = std::chrono::steady_clock::now();
         for (unsigned cnt = 0; cnt != repeat; ++cnt) {
-            
-            linearSearch(ran[cnt], a, n);
-            
+            x = nonuniformDistribution(rng, 100'000, 1'000'000, chance_percent);
+            begin = std::chrono::steady_clock::now();
+            i = linearSearch(x, a, n);
+            end = std::chrono::steady_clock::now();
+            time_span = std::chrono::duration_cast<std::chrono::nanoseconds>(end - begin);
+            time += time_span.count();
         }
-        end = std::chrono::steady_clock::now();
-        time_span = std::chrono::duration_cast<std::chrono::nanoseconds>(end - begin);
-        time += time_span.count();
+        
         fout << n << "," << time << "\n";
         std::cout << n << std::endl;
     }
@@ -223,19 +186,20 @@ int main() {
         for (unsigned cnt = 0; cnt < n; ++cnt) {
             a[cnt] = uniform(rng);
         }
+        //std::shuffle(&a[0], &a[n], rng);
         time = 0;
-        for (unsigned cnt = 0; cnt < repeat; ++cnt) {
-            ran[cnt] = nonuniformDistribution(max_value, repeat_percent, uniform, rng);
-        }
-        begin = std::chrono::steady_clock::now();
         for (unsigned cnt = 0; cnt != repeat; ++cnt) {
-            
-            linearSearchA(ran[cnt], a, n);
-            
+            x = nonuniformDistribution(rng, 100'000, 1'000'000, chance_percent);
+            begin = std::chrono::steady_clock::now();
+            i = linearSearch(x, a, n);
+            end = std::chrono::steady_clock::now();
+            time_span = std::chrono::duration_cast<std::chrono::nanoseconds>(end - begin);
+            time += time_span.count();
+            if (i != 0) {
+                std::swap(a[0], a[i]);
+            }
         }
-        end = std::chrono::steady_clock::now();
-        time_span = std::chrono::duration_cast<std::chrono::nanoseconds>(end - begin);
-        time += time_span.count();
+        
         fout << n << "," << time << "\n";
         std::cout << n << std::endl;
     }
@@ -251,19 +215,20 @@ int main() {
         for (unsigned cnt = 0; cnt < n; ++cnt) {
             a[cnt] = uniform(rng);
         }
+        //std::shuffle(&a[0], &a[n], rng);
         time = 0;
-        for (unsigned cnt = 0; cnt < repeat; ++cnt) {
-            ran[cnt] = nonuniformDistribution(max_value, repeat_percent, uniform, rng);
-        }
-        begin = std::chrono::steady_clock::now();
         for (unsigned cnt = 0; cnt != repeat; ++cnt) {
-            
-            linearSearchB(ran[cnt], a, n);
-            
+            x = nonuniformDistribution(rng, 100'000, 1'000'000, chance_percent);
+            begin = std::chrono::steady_clock::now();
+            i = linearSearch(x, a, n);
+            end = std::chrono::steady_clock::now();
+            time_span = std::chrono::duration_cast<std::chrono::nanoseconds>(end - begin);
+            time += time_span.count();
+            if (i != 0) {
+                std::swap(a[i - 1], a[i]);
+            }
         }
-        end = std::chrono::steady_clock::now();
-        time_span = std::chrono::duration_cast<std::chrono::nanoseconds>(end - begin);
-        time += time_span.count();
+        
         fout << n << "," << time << "\n";
         std::cout << n << std::endl;
     }
@@ -277,28 +242,32 @@ int main() {
 
     for (unsigned n = 100; n <= array_size; n += dn) {
         for (unsigned cnt = 0; cnt < n; ++cnt) {
-            a[cnt] = uniform(rng);
-        }
-        for (unsigned cnt = 0; cnt < n; ++cnt) {
             count[cnt] = 0;
         }
+        for (unsigned cnt = 0; cnt < n; ++cnt) {
+            a[cnt] = uniform(rng);
+        }
+        //std::shuffle(&a[0], &a[n], rng);
         time = 0;
-        for (unsigned cnt = 0; cnt < repeat; ++cnt) {
-            ran[cnt] = nonuniformDistribution(max_value, repeat_percent, uniform, rng);
-        }
-        begin = std::chrono::steady_clock::now();
         for (unsigned cnt = 0; cnt != repeat; ++cnt) {
-            
-            linearSearchC(ran[cnt], a, n, count);
-            
+            x = nonuniformDistribution(rng, 100'000, 1'000'000, chance_percent);
+            begin = std::chrono::steady_clock::now();
+            i = linearSearch(x, a, n);
+            end = std::chrono::steady_clock::now();
+            time_span = std::chrono::duration_cast<std::chrono::nanoseconds>(end - begin);
+            time += time_span.count();
+            ++count[i];
+            if (i != 0) {
+                if (count[i] > count[i - 1]) {
+                    std::swap(a[i - 1], a[i]);
+                }
+            }
         }
-        end = std::chrono::steady_clock::now();
-        time_span = std::chrono::duration_cast<std::chrono::nanoseconds>(end - begin);
-        time += time_span.count();
+        
         fout << n << "," << time << "\n";
         std::cout << n << std::endl;
     }
     fout.close();
     
-    std::cout << "Nonuniform C done." << std::endl;
+    std::cout << "Nonuniform C done." << std::endl;*/
 }
